@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Inscrição com Envio Real de E-mail</title>
+  <!-- Importando a biblioteca do EmailJS -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script type="text/javascript">
+    // Inicialize o EmailJS com sua Public Key (substitua 'YOUR_PUBLIC_KEY' pela sua chave real)
+    (function() {
+      emailjs.init({
+        publicKey: "mC7HJMSYZdfy4F7G-",
+      });
+    })();
+  </script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success-bg: #dcfce7;
+      --success-border: #86efac;
+      --success-text: #166534;
+      --danger-bg: #fee2e2;
+      --danger-border: #fca5a5;
+      --danger-text: #991b1b;
+      --email-bg: #f1f5f9;
+      --email-border: #cbd5e1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 780px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    header {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      border-left: 6px solid var(--primary);
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--primary);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    button {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.85rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .results-title {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .result-item {
+      padding: 1.2rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border: 1px solid transparent;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .status-aprovado {
+      background-color: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success-text);
+    }
+
+    .status-reprovado {
+      background-color: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: var(--danger-text);
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-reasons {
+      margin-top: 0.5rem;
+      padding-left: 1.25rem;
+      font-size: 0.9rem;
+    }
+
+    .email-simulation {
+      margin-top: 0.85rem;
+      background: var(--email-bg);
+      border: 1px solid var(--email-border);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      font-style: italic;
+      padding: 1.5rem 0;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Sistema de Inscrição com Envio Automático de E-mail</h1>
+      <p>Critérios: Frequência &ge; 75% | Autorização entregue | Vaga disponível</p>
+    </header>
+
+    <div class="card">
+      <form id="formInscricao">
+        <div class="form-group">
+          <label for="nome">Nome do Aluno:</label>
+          <input type="text" id="nome" placeholder="Ex: Ana Souza" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">E-mail do Aluno / Responsável:</label>
+          <input type="email" id="email" placeholder="Ex: ana.souza@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="frequencia">Frequência Escolar (%):</label>
+          <input type="number" id="frequencia" min="0" max="100" placeholder="Ex: 85" required>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="autorizacao">Entregou Autorização?</label>
+            <select id="autorizacao" required>
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="haVaga">Há Vaga Disponível?</label>
+            <select id="haVaga" required>
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="btnEnviar">Avaliar e Enviar E-mail Automático</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="results-title">
+        <span>Histórico de Avaliações & Envio de E-mails</span>
+      </div>
+      <div id="listaResultados">
+        <p class="empty-state">Nenhum aluno avaliado ainda. Preencha o formulário acima.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('formInscricao');
+    const listaResultados = document.getElementById('listaResultados');
+    const btnEnviar = document.getElementById('btnEnviar');
+    let primeiroItem = true;
+
+    form.addEventListener('submit', function(evento) {
+      evento.preventDefault();
+
+      // 1. ENTRADA DE DADOS
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const frequencia = parseFloat(document.getElementById('frequencia').value);
+      const autorizacao = document.getElementById('autorizacao').value === 'true';
+      const haVaga = document.getElementById('haVaga').value === 'true';
+
+      // 2. PROCESSAMENTO E TOMADA DE DECISÃO
+      const motivos = [];
+      if (frequencia < 75) motivos.push(`Frequência abaixo de 75% (${frequencia}%)`);
+      if (!autorizacao) motivos.push("Autorização dos responsáveis não entregue");
+      if (!haVaga) motivos.push("Não há vagas disponíveis no momento");
+
+      const statusInscricao = motivos.length === 0 ? "Inscrito com Sucesso" : "Inscrição não realizada";
+      
+      let detalhesMotivos = motivos.length === 0 
+        ? "Todos os critérios foram atendidos com sucesso." 
+        : "Motivos:\n" + motivos.map(m => `- ${m}`).join("\n");
+
+      // Desativa o botão temporariamente durante o envio
+      btnEnviar.disabled = true;
+      btnEnviar.textContent = "Enviando e-mail automático...";
+
+      // Parâmetros enviados para o Template do EmailJS
+      const templateParams = {
+        to_email: email,
+        to_name: nome,
+        status: statusInscricao,
+        detalhes: detalhesMotivos
+      };
+
+      // 3. DISPARO REAL DO E-MAIL VIA EMAILJS
+      // Substitua 'YOUR_SERVICE_ID' e 'YOUR_TEMPLATE_ID' pelas suas chaves
+      emailjs.send("service_9ja0bxy", "template_ef25zb2", templateParams)
+        .then(function(response) {
+          console.log('E-mail enviado com sucesso!', response.status, response.text);
+          finalizarInterface(true, nome, email, motivos, "E-mail enviado com sucesso para " + email);
+        }, function(error) {
+          console.error('Erro ao enviar e-mail:', error);
+          finalizarInterface(false, nome, email, motivos, "Erro ao disparar o e-mail automático.");
+        });
+    });
+
+    function finalizarInterface(sucessoEnvio, nome, email, motivos, mensagemStatus) {
+      btnEnviar.disabled = false;
+      btnEnviar.textContent = "Avaliar e Enviar E-mail Automático";
+
+      if (primeiroItem) {
+        listaResultados.innerHTML = '';
+        primeiroItem = false;
+      }
+
+      const cartaoResultado = document.createElement('div');
+      cartaoResultado.className = 'result-item';
+
+      if (motivos.length === 0) {
+        cartaoResultado.classList.add('status-aprovado');
+        cartaoResultado.innerHTML = `
+          <div class="result-header">
+            <span>${nome} (${email})</span>
+            <span>Inscrito</span>
+          </div>
+          <div>Todos os critérios foram atendidos com sucesso.</div>
+          <div class="email-simulation">
+            <strong>📧 ${mensagemStatus}</strong>
+          </div>
+        `;
+      } else {
+        cartaoResultado.classList.add('status-reprovado');
+        let listaMotivosHtml = '<ul class="result-reasons">';
+        motivos.forEach(motivo => { listaMotivosHtml += `<li>${motivo}</li>`; });
+        listaMotivosHtml += '</ul>';
+
+        cartaoResultado.innerHTML = `
+          <div class="result-header">
+            <span>${nome} (${email})</span>
+            <span>Inscrição não realizada</span>
+          </div>
+          <div><strong>Motivo(s) da não inscrição:</strong></div>
+          ${listaMotivosHtml}
+          <div class="email-simulation">
+            <strong>📧 ${mensagemStatus}</strong>
+          </div>
+        `;
+      }
+
+      listaResultados.prepend(cartaoResultado);
+
+      // Limpa os campos
+      document.getElementById('nome').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('frequencia').value = '';
+      document.getElementById('autorizacao').value = 'true';
+      document.getElementById('haVaga').value = 'true';
+      document.getElementById('nome').focus();
+    }
+  </script>
+</body>
+</html>
